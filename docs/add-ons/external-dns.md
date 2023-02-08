@@ -48,6 +48,8 @@ policies explicitly, you can use the following configuration:
   external_dns_irsa_policies = ["<IAM Policy ARN", ...]
 ```
 
+There is an example policy that grants permissions to managed records for a single hosted zone available [here](../../modules/kubernetes-addons/external-dns/external-dns-policy.json).
+
 ### GitOps Configuration
 
 The following properties are made available for use when managing the add-on via GitOps.
