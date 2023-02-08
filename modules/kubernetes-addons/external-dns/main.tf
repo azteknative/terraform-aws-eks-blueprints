@@ -1,6 +1,7 @@
 locals {
   name            = try(var.helm_config.name, "external-dns")
   service_account = try(var.helm_config.service_account, "${local.name}-sa")
+  irsa_iam_policies = var.create_policy ? concat([aws_iam_policy.external_dns[0].arn], var.irsa_policies) : var.irsa_policies
 
   argocd_gitops_config = merge(
     {
@@ -54,7 +55,7 @@ module "helm_addon" {
     create_kubernetes_service_account   = true
     create_service_account_secret_token = try(var.helm_config["create_service_account_secret_token"], false)
     kubernetes_service_account          = local.service_account
-    irsa_iam_policies                   = concat([aws_iam_policy.external_dns.arn], var.irsa_policies)
+    irsa_iam_policies                   = local.irsa_iam_policies
   }
 
   addon_context     = var.addon_context
@@ -66,6 +67,7 @@ module "helm_addon" {
 #------------------------------------
 
 resource "aws_iam_policy" "external_dns" {
+  count       = var.create_policy ? 1 : 0
   description = "External DNS IAM policy."
   name        = "${var.addon_context.eks_cluster_id}-${local.name}-irsa"
   path        = var.addon_context.irsa_iam_role_path
