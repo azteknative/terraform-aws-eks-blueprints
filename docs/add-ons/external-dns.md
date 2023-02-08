@@ -39,6 +39,15 @@ You can optionally customize the Helm chart that deploys `external-dns` via the 
   }
 ```
 
+If you wish to prevent the Terraform module from creating an IAM policy, and instead pass the necessary
+policies explicitly, you can use the following configuration:
+
+```hcl
+  enable_external_dns        = true
+  external_dns_create_policy = false
+  external_dns_irsa_policies = ["<IAM Policy ARN", ...]
+```
+
 ### GitOps Configuration
 
 The following properties are made available for use when managing the add-on via GitOps.
