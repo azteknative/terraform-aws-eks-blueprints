@@ -10,6 +10,12 @@ variable "manage_via_gitops" {
   default     = false
 }
 
+variable "create_policy" {
+  description = "Controls whether or not to create an IAM policy for the addon."
+  type        = bool
+  default     = true
+}
+
 variable "irsa_policies" {
   description = "Additional IAM policies used for the add-on service account."
   type        = list(string)
