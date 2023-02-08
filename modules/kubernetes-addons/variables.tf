@@ -353,6 +353,12 @@ variable "external_dns_helm_config" {
   default     = {}
 }
 
+variable "external_dns_create_policy" {
+  description = "Controls whether or not to create an IAM policy for the addon."
+  type        = bool
+  default     = true
+}
+
 variable "external_dns_irsa_policies" {
   description = "Additional IAM policies for a IAM role for service accounts"
   type        = list(string)
