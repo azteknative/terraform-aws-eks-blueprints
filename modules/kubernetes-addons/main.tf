@@ -210,6 +210,7 @@ module "cert_manager" {
   source                            = "./cert-manager"
   helm_config                       = var.cert_manager_helm_config
   manage_via_gitops                 = var.argocd_manage_add_ons
+  create_policy                     = var.cert_manager_create_policy
   irsa_policies                     = var.cert_manager_irsa_policies
   addon_context                     = local.addon_context
   domain_names                      = var.cert_manager_domain_names

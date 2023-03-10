@@ -761,6 +761,12 @@ variable "cert_manager_helm_config" {
   default     = {}
 }
 
+variable "cert_manager_create_policy" {
+  description = "Controls whether the module attempts to generate an IAM policy for cert-manager."
+  type        = bool
+  default     = true
+}
+
 variable "cert_manager_irsa_policies" {
   description = "Additional IAM policies for a IAM role for service accounts"
   type        = list(string)
@@ -852,6 +858,12 @@ variable "argocd_helm_config" {
   description = "Argo CD Kubernetes add-on config"
   type        = any
   default     = {}
+}
+
+variable "argocd_irsa_iam_policies" {
+  description = "IAM policies to pass to the IRSA module."
+  type        = list(string)
+  default     = []
 }
 
 variable "argocd_applications" {

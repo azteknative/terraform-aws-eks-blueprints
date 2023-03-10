@@ -40,6 +40,7 @@ resource "helm_release" "cert_manager_letsencrypt" {
 }
 
 resource "aws_iam_policy" "cert_manager" {
+  count       = var.create_policy ? 1 : 0
   description = "cert-manager IAM policy."
   name        = "${var.addon_context.eks_cluster_id}-${local.helm_config["name"]}-irsa"
   path        = var.addon_context.irsa_iam_role_path
