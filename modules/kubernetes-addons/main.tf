@@ -119,6 +119,14 @@ module "argocd" {
   applications  = var.argocd_applications
   addon_config  = { for k, v in local.argocd_addon_config : k => v if v != null }
   addon_context = local.addon_context
+
+  depends_on = [time_sleep.wait_for_ingress_nginx_create]
+}
+
+resource "time_sleep" "wait_for_ingress_nginx_create" {
+  depends_on = [module.ingress_nginx]
+
+  create_duration = "60s"
 }
 
 module "argo_rollouts" {
@@ -217,6 +225,14 @@ module "cert_manager" {
   install_letsencrypt_issuers       = var.cert_manager_install_letsencrypt_issuers
   letsencrypt_email                 = var.cert_manager_letsencrypt_email
   kubernetes_svc_image_pull_secrets = var.cert_manager_kubernetes_svc_image_pull_secrets
+
+  #depends_on = [time_sleep.wait_for_argocd_destroy]
+}
+
+resource "time_sleep" "wait_for_argocd_destroy" {
+  depends_on = [module.argocd]
+
+  destroy_duration = "60s"
 }
 
 module "cert_manager_csi_driver" {
