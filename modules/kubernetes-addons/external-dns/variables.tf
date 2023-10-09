@@ -19,6 +19,7 @@ variable "create_policy" {
 variable "irsa_policies" {
   description = "Additional IAM policies used for the add-on service account."
   type        = list(string)
+  default     = []
 }
 
 variable "domain_name" {
