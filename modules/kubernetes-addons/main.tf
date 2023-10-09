@@ -119,6 +119,14 @@ module "argocd" {
   applications  = var.argocd_applications
   addon_config  = { for k, v in local.argocd_addon_config : k => v if v != null }
   addon_context = local.addon_context
+
+  depends_on = [time_sleep.wait_for_ingress_nginx_create]
+}
+
+resource "time_sleep" "wait_for_ingress_nginx_create" {
+  depends_on = [module.ingress_nginx]
+
+  create_duration = "60s"
 }
 
 module "argo_rollouts" {
@@ -182,6 +190,8 @@ module "aws_load_balancer_controller" {
   source            = "./aws-load-balancer-controller"
   helm_config       = var.aws_load_balancer_controller_helm_config
   manage_via_gitops = var.argocd_manage_add_ons
+  create_policy     = var.aws_load_balancer_controller_create_policy
+  policy_arn        = var.aws_load_balancer_controller_policy_arn
   addon_context     = merge(local.addon_context, { default_repository = local.amazon_container_image_registry_uris[data.aws_region.current.name] })
 }
 
@@ -208,12 +218,21 @@ module "cert_manager" {
   source                            = "./cert-manager"
   helm_config                       = var.cert_manager_helm_config
   manage_via_gitops                 = var.argocd_manage_add_ons
+  create_policy                     = var.cert_manager_create_policy
   irsa_policies                     = var.cert_manager_irsa_policies
   addon_context                     = local.addon_context
   domain_names                      = var.cert_manager_domain_names
   install_letsencrypt_issuers       = var.cert_manager_install_letsencrypt_issuers
   letsencrypt_email                 = var.cert_manager_letsencrypt_email
   kubernetes_svc_image_pull_secrets = var.cert_manager_kubernetes_svc_image_pull_secrets
+
+  #depends_on = [time_sleep.wait_for_argocd_destroy]
+}
+
+resource "time_sleep" "wait_for_argocd_destroy" {
+  depends_on = [module.argocd]
+
+  destroy_duration = "60s"
 }
 
 module "cert_manager_csi_driver" {
@@ -280,6 +299,7 @@ module "external_dns" {
 
   helm_config       = var.external_dns_helm_config
   manage_via_gitops = var.argocd_manage_add_ons
+  create_policy     = var.external_dns_create_policy
   irsa_policies     = var.external_dns_irsa_policies
   addon_context     = local.addon_context
 
@@ -362,23 +382,23 @@ module "kube_state_metrics" {
   addon_context     = local.addon_context
 }
 
-module "ondat" {
-  source = "./ondat"
-
-  count = var.enable_ondat ? 1 : 0
-
-  helm_config       = var.ondat_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
-  irsa_policies     = var.ondat_irsa_policies
-  create_cluster    = var.ondat_create_cluster
-  etcd_endpoints    = var.ondat_etcd_endpoints
-  etcd_ca           = var.ondat_etcd_ca
-  etcd_cert         = var.ondat_etcd_cert
-  etcd_key          = var.ondat_etcd_key
-  admin_username    = var.ondat_admin_username
-  admin_password    = var.ondat_admin_password
-}
+#module "ondat" {
+#  source = "./ondat"
+#
+#  count = var.enable_ondat ? 1 : 0
+#
+#  helm_config       = var.ondat_helm_config
+#  manage_via_gitops = var.argocd_manage_add_ons
+#  addon_context     = local.addon_context
+#  irsa_policies     = var.ondat_irsa_policies
+#  create_cluster    = var.ondat_create_cluster
+#  etcd_endpoints    = var.ondat_etcd_endpoints
+#  etcd_ca           = var.ondat_etcd_ca
+#  etcd_cert         = var.ondat_etcd_cert
+#  etcd_key          = var.ondat_etcd_key
+#  admin_username    = var.ondat_admin_username
+#  admin_password    = var.ondat_admin_password
+#}
 
 module "kube_prometheus_stack" {
   count             = var.enable_kube_prometheus_stack ? 1 : 0
