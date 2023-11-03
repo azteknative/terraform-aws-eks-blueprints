@@ -337,13 +337,16 @@ module "karpenter" {
 
   count = var.enable_karpenter ? 1 : 0
 
-  helm_config                      = var.karpenter_helm_config
-  irsa_policies                    = var.karpenter_irsa_policies
-  node_iam_instance_profile        = var.karpenter_node_iam_instance_profile
-  enable_spot_termination_handling = var.karpenter_enable_spot_termination_handling
-  sqs_queue_arn                    = var.karpenter_sqs_queue_arn
-  manage_via_gitops                = var.argocd_manage_add_ons
-  addon_context                    = local.addon_context
+  helm_config                                 = var.karpenter_helm_config
+  irsa_policies                               = var.karpenter_irsa_policies
+  node_iam_instance_profile                   = var.karpenter_node_iam_instance_profile
+  enable_spot_termination                     = var.karpenter_enable_spot_termination_handling
+  rule_name_prefix                            = var.karpenter_event_rule_name_prefix
+  manage_via_gitops                           = var.argocd_manage_add_ons
+  addon_context                               = local.addon_context
+  sqs_queue_managed_sse_enabled               = var.sqs_queue_managed_sse_enabled
+  sqs_queue_kms_master_key_id                 = var.sqs_queue_kms_master_key_id
+  sqs_queue_kms_data_key_reuse_period_seconds = var.sqs_queue_kms_data_key_reuse_period_seconds
 }
 
 module "keda" {
@@ -371,9 +374,16 @@ module "metrics_server" {
   addon_context     = local.addon_context
 }
 
+module "kube_state_metrics" {
+  count             = var.enable_kube_state_metrics ? 1 : 0
+  source            = "./kube-state-metrics"
+  helm_config       = var.kube_state_metrics_helm_config
+  manage_via_gitops = var.argocd_manage_add_ons
+  addon_context     = local.addon_context
+}
+
 #module "ondat" {
-#  source  = "ondat/ondat-addon/eksblueprints"
-#  version = "0.1.2"
+#  source = "./ondat"
 #
 #  count = var.enable_ondat ? 1 : 0
 #
@@ -399,12 +409,14 @@ module "kube_prometheus_stack" {
 }
 
 module "portworx" {
-  count         = var.enable_portworx ? 1 : 0
-  source        = "portworx/portworx-addon/eksblueprints"
-  version       = "0.0.6"
+  source = "./portworx"
+
+  count = var.enable_portworx ? 1 : 0
+
   helm_config   = var.portworx_helm_config
   addon_context = local.addon_context
 }
+
 module "prometheus" {
   count       = var.enable_prometheus ? 1 : 0
   source      = "./prometheus"
@@ -451,8 +463,7 @@ module "strimzi_kafka_operator" {
 }
 
 module "sysdig_agent" {
-  source  = "sysdiglabs/sysdig-addon/eksblueprints"
-  version = "0.0.3"
+  source = "./sysdig"
 
   count         = var.enable_sysdig_agent ? 1 : 0
   helm_config   = var.sysdig_agent_helm_config
@@ -460,11 +471,6 @@ module "sysdig_agent" {
 }
 
 module "tetrate_istio" {
-  # source  = "tetratelabs/tetrate-istio-addon/eksblueprints"
-  # version = "0.0.7"
-
-  # TODO - remove local source and revert to remote once
-  # https://github.com/tetratelabs/terraform-eksblueprints-tetrate-istio-addon/pull/12  is merged
   source = "./tetrate-istio"
 
   count = var.enable_tetrate_istio ? 1 : 0
@@ -542,6 +548,7 @@ module "secrets_store_csi_driver" {
   manage_via_gitops = var.argocd_manage_add_ons
   addon_context     = local.addon_context
 }
+
 module "aws_privateca_issuer" {
   count                   = var.enable_aws_privateca_issuer ? 1 : 0
   source                  = "./aws-privateca-issuer"
